@@ -5,12 +5,14 @@ slug: "/what-is-go-context"
 ---
 
 # Contents
- - [Go Context คืออะไร](#go-context-คืออะไร) 
- - [การใช้งานเบื้องต้น](#การใช้งานเบื้องต้น) 
- - [Method ใน Go Context](#method-ใน-go-context)
- - [สรุปการใช้งาน Context](#สรุปการใช้งาน-context)
-
-## Go Context คืออะไร
+ - [Go Context คืออะไร](#what-is-go-context)
+ - [การใช้งานเบื้องต้น](#basic-usage) 
+ - [Method ใน Go Context](#method-in-go-context)
+ - [สรุปการใช้งาน Context](#summary)
+---
+<span id="what-is-go-context">
+  ## Go Context คืออะไร
+</span>
 ลองนึกภาพว่าเราเล่นต่อเลโก้กันอยู่ เราสร้างบ้านหลังใหญ่ มีสวนสวย มีสระว่ายน้ำ แต่ถ้าไม่มีพื้นรองฐาน บ้านของเราจะพังทลายลงมาง่ายๆ
 
 **Go Context** ก็เหมือนกับพื้นรองฐานของโปรแกรมภาษา Go ช่วยให้โปรแกรมทำงานได้*เสถียร รวดเร็ว และเข้าใจง่าย* ข้อมูลสำคัญต่างๆ ที่โปรแกรมต้องการจะถูกเก็บไว้ใน Context เหมือนกับเก็บของไว้ในกล่อง ช่วยให้หาของได้ง่ายและไม่หาย
@@ -19,7 +21,11 @@ slug: "/what-is-go-context"
 
 **Go Context** ช่วยให้หุ่นยนต์เหล่านี้สื่อสารกันง่ายขึ้น โดยไม่ต้องส่งข้อมูลไปมาเอง หุ่นยนต์แต่ละตัวสามารถดึงข้อมูลที่ต้องการจาก Context เหมือนกับหยิบของจากกล่อง ช่วยให้ทำงานได้รวดเร็วและมีประสิทธิภาพ
 
-## การใช้งานเบื้องต้น
+---
+
+<span id="basic-usage">
+  ## การใช้งานเบื้องต้น
+</span>
 
 ตัวอย่างการใช้งาน Context กับ net/http ระหว่าง 2 Service
 
@@ -153,8 +159,12 @@ func getUserProfile(id string) (ProfileData,error){
 }
 
 ```
-
+---
 ## Method ใน Go Context
+
+<span id="method-in-go-context">
+  ## Method ใน Go Context
+</span>
 
  1. ` context.WithValue(ctx context.Context, key interface{}, value interface{}) context.Context`
 
@@ -241,7 +251,9 @@ defer cancel()
     time.Sleep(1 * time.Second)
 ```
 ---
-## สรุปการใช้งาน Context
+<span id="summary">
+  ## สรุปการใช้งาน Context
+</span>
 
     ### ประโยชน์
     - การสื่อสารระหว่าง Middleware และ Handler: ช่วยให้ Middleware ส่งข้อมูลไปยัง Handler โดยไม่ต้องใช้ global variables หรือ arguments ของ function
