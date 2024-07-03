@@ -1,0 +1,257 @@
+---
+title: "Go Context คืออะไร อธิบายแบบเด็กอนุบาลก็เข้าใจ"
+date: 2024-07-03
+slug: "/what-is-go-context"
+---
+
+# Contents
+ - [Go Context คืออะไร](#go-context-คืออะไร) 
+ - [การใช้งานเบื้องต้น](#การใช้งานเบื้องต้น) 
+ - [Method ใน Go Context](#method-ใน-go-context)
+ - [สรุปการใช้งาน Context](#สรุปการใช้งาน-context)
+
+## Go Context คืออะไร
+ลองนึกภาพว่าเราเล่นต่อเลโก้กันอยู่ เราสร้างบ้านหลังใหญ่ มีสวนสวย มีสระว่ายน้ำ แต่ถ้าไม่มีพื้นรองฐาน บ้านของเราจะพังทลายลงมาง่ายๆ
+
+**Go Context** ก็เหมือนกับพื้นรองฐานของโปรแกรมภาษา Go ช่วยให้โปรแกรมทำงานได้*เสถียร รวดเร็ว และเข้าใจง่าย* ข้อมูลสำคัญต่างๆ ที่โปรแกรมต้องการจะถูกเก็บไว้ใน Context เหมือนกับเก็บของไว้ในกล่อง ช่วยให้หาของได้ง่ายและไม่หาย
+
+ลองจินตนาการว่าโปรแกรมของเราเหมือนกับหุ่นยนต์ที่ทำงานต่างๆ มากมาย หุ่นยนต์แต่ละตัวต้องการข้อมูลที่แตกต่างกัน บางตัวต้องการรู้ว่าผู้ใช้กดปุ่มอะไร บางตัวต้องการรู้ว่าเวลาปัจจุบันคือกี่โมง
+
+**Go Context** ช่วยให้หุ่นยนต์เหล่านี้สื่อสารกันง่ายขึ้น โดยไม่ต้องส่งข้อมูลไปมาเอง หุ่นยนต์แต่ละตัวสามารถดึงข้อมูลที่ต้องการจาก Context เหมือนกับหยิบของจากกล่อง ช่วยให้ทำงานได้รวดเร็วและมีประสิทธิภาพ
+
+## การใช้งานเบื้องต้น
+
+ตัวอย่างการใช้งาน Context กับ net/http ระหว่าง 2 Service
+
+ลองจินตนาการว่าเรามี 2 เว็บเซิร์ฟเวอร์:
+
+- **Service A**: ให้บริการข้อมูลผู้ใช้
+- **Service B**: แสดงโปรไฟล์ผู้ใช้
+
+**Service A** จะดึงข้อมูลผู้ใช้จากฐานข้อมูลและส่งไปยัง Service B
+
+**Service B** จะใช้ข้อมูลผู้ใช้เพื่อแสดงโปรไฟล์
+
+เราสามารถใช้ Go Context เพื่อส่งข้อมูลผู้ใช้ระหว่าง 2 Service ดังนี้
+
+**Service A:**
+
+```go
+package main
+
+import (
+    "context"
+    "encoding/json"
+    "fmt"
+    "net/http"
+)
+
+type ProfileData struct {
+    ID string
+    Name string
+    Email string
+}
+
+func main() {
+    http.HandleFunc("/", getUserProfileHandler)
+    http.ListenAndServe(":8080", nil)
+}
+
+func getUserProfileHandler(w http.ResponseWriter, r *http.Request) {
+    // ดึง User ID จาก URL
+    userID := r.URL.Query().Get("userID")
+    if userID == "" {
+        http.Error(w, "missing userID in query parameter", http.StatusBadRequest)
+        return
+    }
+
+    // สร้าง Context ใหม่
+    ctx := context.WithValue(r.Context(), "userID", userID)
+
+    // ส่ง Request ไปยัง Service B
+    resp, err := http.Get(ctx, "http://localhost:8081/profile")
+    if err != nil {
+        http.Error(w, err.Error(), http.StatusInternalServerError)
+        return
+    }
+
+    defer resp.Body.Close()
+
+    if resp.StatusCode != http.StatusOK {
+        http.Error(w, "failed to get profile from Service B", resp.StatusCode)
+        return
+    }
+
+    // อ่านข้อมูลผู้ใช้จาก Service B
+    var profileData UserData
+    if err := json.NewDecoder(resp.Body).Decode(&profileData); err != nil {
+        http.Error(w, err.Error(), http.StatusInternalServerError)
+        return
+    }
+
+    // แสดงข้อมูล profileData
+    fmt.Fprintf(w, "Name: %s\nEmail: %s", profileData.Name, profileData.Email)
+}
+```
+
+**Service B:**
+```go
+package main
+
+import (
+    "context"
+    "encoding/json"
+    "fmt"
+    "net/http"
+)
+
+type ProfileData struct {
+    ID string
+    Name string
+    Email string
+}
+
+func main() {
+    http.HandleFunc("/profile", getProfileHandler)
+    http.ListenAndServe(":8081", nil)
+}
+
+func getProfileHandler(w http.ResponseWriter, r *http.Request) {
+    // ดึง User ID จาก Context
+    userID, ok := context.Value(r.Context(), "userID").(string)
+    if !ok {
+        http.Error(w, "missing userID in context", http.StatusBadRequest)
+        return
+    }
+
+    // ดึงข้อมูล user จาก database (สมมติ)
+    profileData, err := getUserProfile(userID)
+    if err != nil {
+        http.Error(w, err.Error(), http.StatusInternalServerError)
+        return
+    }
+
+    // แปลงข้อมูล profileData เป็น JSON
+    jsonData, err := json.Marshal(profileData)
+    if err != nil {
+        http.Error(w, err.Error(), http.StatusInternalServerError)
+        return
+    }
+
+    // ส่ง jsonData ไปยัง Client
+    w.Header().Set("Content-Type", "application/json")
+    w.Write(jsonData)
+}
+
+func getUserProfile(id string) (ProfileData,error){
+    // ดึงข้อมูล user จาก database
+    return ProfileData{
+        ID: id,
+        Name: "John Doe",
+        Email: "john.doe@gmail.comp",
+    },nil
+}
+
+```
+
+## Method ใน Go Context
+
+ 1. ` context.WithValue(ctx context.Context, key interface{}, value interface{}) context.Context`
+
+ใช้สำหรับเพิ่มค่าใหม่ลงใน Context
+
+ - ctx คือ Context ที่ต้องการเพิ่มค่า
+ - key คือ key ของค่า
+ - value คือค่าที่จะเพิ่ม
+ - ฟังก์ชันนี้ return Context ใหม่กลับมา
+
+ตัวอย่างการใช้งาน
+ ```go 
+ ctx := context.WithValue(context.Background(), "userID", "user123")
+ ```
+
+ 2. `context.Value(ctx context.Context, key interface{}) interface{}`
+ดึงค่าจาก Context
+
+ - ctx คือ Context ที่ต้องการดึงค่า
+ - key คือ key ของค่า
+ - ฟังก์ชันนี้ส่งค่าที่ดึงมา หรือ nil ถ้าไม่มีค่า
+
+ตัวอย่างการใช้งาน
+ ```go
+userID, ok := context.Value(ctx, "userID").(string)
+if !ok {
+    fmt.Println("missing userID in context")
+} else {
+    fmt.Println("userID:", userID)
+}
+```
+
+3. `context.WithTimeout(ctx context.Context, timeout time.Duration) (context.Context, context.CancelFunc)`
+สร้าง Context ใหม่ที่มี timeout
+
+ - ctx คือ Context เริ่มต้น
+ - timeout คือระยะเวลา timeout
+ - ฟังก์ชันนี้ return Context ใหม่และ context.CancelFunc กลับมา
+
+ตัวอย่างการใช้งาน
+ ```go
+ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+defer cancel()
+```
+
+4. `context.Background() context.Context`
+เป็น Context เริ่มต้นที่ว่างเปล่า ไม่มีค่าใดๆ และไม่สามารถยกเลิกได้ มักใช้เป็น Context เริ่มต้นสำหรับโปรแกรม Go
+
+ตัวอย่างการใช้งาน
+ ```go
+    // สร้าง Context ใหม่โดยใช้ context.Background() เป็น Context เริ่มต้น
+    ctx := context.Background()
+
+    // สร้าง Value ใหม่ ด้วย key และ value โดย ใช้ context.WithValue()
+    ctx2 := context.WithValue(ctx, "key", "value")
+
+    fmt.Println(context.Value(ctx2, "key")) // แสดงค่า "value"
+```
+
+5. `context.Done(ctx context.Context) <-chan struct{}`
+เป็นฟังก์ชันที่ส่ง channel ที่จะปิดเมื่อ Context ถูกยกเลิก
+
+ - รอจนกว่า Context จะถูกยกเลิก: โปรแกรมจะรอจนกว่า Context จะถูกยกเลิกก่อนที่จะดำเนินการต่อ
+ - ใช้สำหรับงานที่ต้องทำงานเมื่อ Context ถูกยกเลิก: สามารถใช้ channel ที่ส่งกลับมาเพื่อทำงานที่ต้องทำงานเมื่อ Context ถูกยกเลิก
+
+ตัวอย่างการใช้งาน
+ ```go
+     // สร้าง Context ใหม่โดยใช้ context.WithCancel()
+    ctx, cancel := context.WithCancel(context.Background())
+
+    // ทำงานบางอย่างใน goroutine แยก
+    go func() {
+        <-ctx.Done() // รอจนกว่า Context จะถูกยกเลิก
+        fmt.Println("Context has been canceled")
+    }()
+
+    // รอ 5 วินาที
+    time.Sleep(5 * time.Second)
+
+    // ยกเลิก Context
+    cancel()
+
+    // รอให้ goroutine ทำงานเสร็จ
+    time.Sleep(1 * time.Second)
+```
+---
+## สรุปการใช้งาน Context
+
+    ### ประโยชน์
+    - การสื่อสารระหว่าง Middleware และ Handler: ช่วยให้ Middleware ส่งข้อมูลไปยัง Handler โดยไม่ต้องใช้ global variables หรือ arguments ของ function
+    - การจัดการ Error: ช่วยให้ Middleware ส่ง Error ไปยัง Handler โดยไม่ต้องใช้ return values หรือ exceptions
+    - การยกเลิก Request: ช่วยให้ Client สามารถยกเลิก Request ได้โดยไม่ต้องรอจนกว่า Request จะเสร็จสิ้น
+    - การตั้งค่า Timeout: ช่วยให้ตั้งค่าเวลาสูงสุดที่ Request สามารถทำงานได้ 
+    - การ Dependency Injection: ช่วยให้ inject dependencies ไปยัง Middleware และ Handler 
+    - การแบ่ง Code: ช่วยให้แบ่ง Code ออกเป็นโมดูลแยกต่างหากและสื่อสารกันผ่าน Context
+
+    ### Use Case
+    - Web Application: ใช้ Context เพื่อส่งข้อมูลระหว่าง Middleware และ Handler จัดการ Error ยกเลิก Request ตั้งค่า Timeout และ inject dependencies
+    - Microservice: ใช้ Context เพื่อสื่อสารระหว่างไมโครเซอร์วิส จัดการ Error ยกเลิก Request ตั้งค่า Timeout และ inject dependencies
+
