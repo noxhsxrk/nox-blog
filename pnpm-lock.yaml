@@ -20,6 +20,9 @@ importers:
       gatsby-plugin-feed:
         specifier: ^5.13.1
         version: 5.13.1(gatsby@5.13.6(@types/webpack@5.28.5)(babel-eslint@10.1.0(eslint@7.32.0))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(type-fest@2.19.0)(typescript@5.5.3))(graphql@16.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      gatsby-plugin-google-analytics:
+        specifier: ^5.13.1
+        version: 5.13.1(gatsby@5.13.6(@types/webpack@5.28.5)(babel-eslint@10.1.0(eslint@7.32.0))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(type-fest@2.19.0)(typescript@5.5.3))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       gatsby-plugin-manifest:
         specifier: ^5.13.1
         version: 5.13.1(gatsby@5.13.6(@types/webpack@5.28.5)(babel-eslint@10.1.0(eslint@7.32.0))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(type-fest@2.19.0)(typescript@5.5.3))(graphql@16.9.0)
@@ -3490,6 +3493,14 @@ packages:
       react: ^18.0.0 || ^0.0.0
       react-dom: ^18.0.0 || ^0.0.0
 
+  gatsby-plugin-google-analytics@5.13.1:
+    resolution: {integrity: sha512-6TzvUPW7CBpfpSIqpcvaRwRKTYgM3CKqSnfyRIY16vlAKYkAtZLXm3PkIbg0+mM+WzY6GRnAoeXqRkXJv0FK9A==}
+    engines: {node: '>=18.0.0'}
+    peerDependencies:
+      gatsby: ^5.0.0-next
+      react: ^18.0.0 || ^0.0.0
+      react-dom: ^18.0.0 || ^0.0.0
+
   gatsby-plugin-manifest@5.13.1:
     resolution: {integrity: sha512-F8zGMYz2tRDAzQO7hLrYv+xCFyIoeySeGsEk9j1KTdWB4liVQvLtFSXzj7yljyOTinDmA7mDStCiQFStC0rHZQ==}
     engines: {node: '>=18.0.0'}
@@ -6524,6 +6535,9 @@ packages:
   web-streams-polyfill@3.3.3:
     resolution: {integrity: sha512-d2JWLCivmZYTSIoge9MsgFCZrt571BikcWGYkjC1khllbTeDlGqZ2D8vD8E/lJa8WGWbb7Plm8/XJYV7IJHZZw==}
     engines: {node: '>= 8'}
+
+  web-vitals@1.1.2:
+    resolution: {integrity: sha512-PFMKIY+bRSXlMxVAQ+m2aw9c/ioUYfDgrYot0YUa+/xa0sakubWhSDyxAKwzymvXVdF4CZI71g06W+mqhzu6ig==}
 
   webidl-conversions@3.0.1:
     resolution: {integrity: sha512-2JAn3z8AR6rjK8Sm8orRC0h/bcl/DqL7tRPdGZ4I1CjdF+EaMLmYxBHyXuKL849eucPFhvBoxMsflfOb8kxaeQ==}
@@ -11317,6 +11331,15 @@ snapshots:
     transitivePeerDependencies:
       - graphql
 
+  gatsby-plugin-google-analytics@5.13.1(gatsby@5.13.6(@types/webpack@5.28.5)(babel-eslint@10.1.0(eslint@7.32.0))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(type-fest@2.19.0)(typescript@5.5.3))(react-dom@18.3.1(react@18.3.1))(react@18.3.1):
+    dependencies:
+      '@babel/runtime': 7.24.7
+      gatsby: 5.13.6(@types/webpack@5.28.5)(babel-eslint@10.1.0(eslint@7.32.0))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(type-fest@2.19.0)(typescript@5.5.3)
+      minimatch: 3.1.2
+      react: 18.3.1
+      react-dom: 18.3.1(react@18.3.1)
+      web-vitals: 1.1.2
+
   gatsby-plugin-manifest@5.13.1(gatsby@5.13.6(@types/webpack@5.28.5)(babel-eslint@10.1.0(eslint@7.32.0))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(type-fest@2.19.0)(typescript@5.5.3))(graphql@16.9.0):
     dependencies:
       '@babel/runtime': 7.24.7
@@ -15101,6 +15124,8 @@ snapshots:
   weak-lru-cache@1.2.2: {}
 
   web-streams-polyfill@3.3.3: {}
+
+  web-vitals@1.1.2: {}
 
   webidl-conversions@3.0.1: {}
 
